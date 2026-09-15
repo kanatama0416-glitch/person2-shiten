@@ -22,6 +22,61 @@ jobs:
         run: |
           mkdir -p public
           cp index.html public/index.html
+      - name: Render wingless final eye god
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('public/index.html')
+          s = p.read_text()
+
+          extra_css = r'''
+          .wing{display:none!important}
+          .stage-30 .room-evolution{top:43%;transform:translate(-50%,-50%) scale(.82)}
+          .stage-30 .room-pet{top:43%;width:148px;height:92px}
+          .stage-30 .room-pet-eye{box-shadow:0 0 0 3px #e4b20a;animation:godBlink 8s infinite}
+          .stage-30 .room-pet-iris{width:62px;height:62px}
+          .stage-30 .cloud{display:none!important}
+          .god-rays{position:absolute;inset:-18px;border-radius:50%;background:repeating-conic-gradient(from -1deg,#e4b20a 0deg 1.2deg,transparent 1.2deg 13deg);opacity:.58;animation:rayPulse 3.2s ease-in-out infinite;z-index:0}
+          .god-halo{position:absolute;left:50%;top:50%;width:264px;height:194px;border:2px dotted #e4b20a;border-radius:50%;transform:translate(-50%,-50%);z-index:1}
+          .god-halo:before{content:'';position:absolute;inset:18px;border:2px solid #e4b20a;border-radius:50%}
+          .god-halo:after{content:'';position:absolute;left:50%;top:50%;width:282px;height:2px;background:linear-gradient(90deg,transparent 0 6%,#e4b20a 6% 42%,transparent 42% 58%,#e4b20a 58% 94%,transparent 94%);transform:translate(-50%,-50%)}
+          .god-axis{position:absolute;left:50%;top:50%;width:2px;height:218px;background:linear-gradient(transparent,#e4b20a 12% 42%,transparent 42% 58%,#e4b20a 58% 88%,transparent);transform:translate(-50%,-50%);z-index:1}
+          .god-ring{position:absolute;left:50%;top:50%;width:232px;height:232px;transform:translate(-50%,-50%);z-index:3}
+          .god-orbit-eye{position:absolute;left:50%;top:50%;width:38px;height:26px;border:3px solid #111;border-radius:50%;background:#fff;transform:translate(-50%,-50%) rotate(var(--a)) translateX(106px) rotate(var(--na));box-shadow:0 0 0 2px #fff}
+          .god-orbit-eye:before{content:'';position:absolute;left:50%;top:50%;width:17px;height:17px;border:2px solid #111;border-radius:50%;background:var(--room-blue);transform:translate(-50%,-50%)}
+          .god-orbit-eye:after{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#111;transform:translate(-50%,-50%);box-shadow:5px -6px 0 -3px #fff}
+          .god-star{z-index:8}.gs1{left:128px;top:-15px}.gs2{right:7px;top:45px;font-size:17px}.gs3{left:8px;bottom:35px;font-size:16px}.gs4{right:17px;bottom:23px;font-size:13px}
+          '''
+
+          marker = '.room-scene.evolving{'
+          if marker not in s:
+              raise SystemExit('style marker not found')
+          s = s.replace(marker, extra_css + marker, 1)
+
+          orbit_eyes = ''.join(
+              '<i class="god-orbit-eye" style="--a:%ddeg;--na:%ddeg"></i>' % (i*45, -i*45)
+              for i in range(8)
+          )
+          final_block = (
+              "if(stage===30){evolution.classList.add('god');"
+              "evolution.innerHTML='<i class=\"god-rays\"></i><i class=\"god-halo\"></i><i class=\"god-axis\"></i><span class=\"god-ring\">" + orbit_eyes + "</span><b class=\"god-star gs1\">✦</b><b class=\"god-star gs2\">✦</b><b class=\"god-star gs3\">✦</b><b class=\"god-star gs4\">✦</b>';"
+              "status.textContent='なんだか、ぜんぶみえる。';"
+              "help.innerHTML='もう、目玉をあげなくてもいいみたい。<br>いま、こっちを見ている。';"
+              "next.textContent='';spawnButton.disabled=true;spawnText.textContent='みられている。';tray.innerHTML='';"
+              "pet.setAttribute('aria-label','金色の後光と目玉衛星を持つ神々しい目玉');}"
+          )
+          pattern = r"if\(stage===30\)\{evolution\.classList\.add\('god'\);.*?pet\.setAttribute\('aria-label','[^']*'\);\}"
+          s, n = re.subn(pattern, lambda m: final_block, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('final evolution block not found')
+
+          cache_meta = '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
+          s = s.replace('<head>', '<head>'+cache_meta, 1)
+          p.write_text(s)
+          Path('public/latest.html').write_text(s)
+          PY
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
