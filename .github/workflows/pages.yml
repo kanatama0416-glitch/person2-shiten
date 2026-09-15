@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 concurrency:
@@ -18,56 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add grow-again button
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('index.html')
-          s = p.read_text()
-          marker = '/* RESTART_GROW_V1 */'
-
-          if marker not in s:
-              css = r'''
-          /* RESTART_GROW_V1 */
-          .room-restart{display:none;width:100%;min-height:48px;margin:10px 0 0;border:2px solid #111;border-radius:99px;background:#fff;box-shadow:3px 3px 0 #111;font-weight:800!important;font-size:14px!important;letter-spacing:.02em}
-          .room-restart:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
-          .stage-30 .room-restart{display:block}
-          '''
-              style_marker = '.room-scene.evolving{'
-              if style_marker not in s:
-                  raise SystemExit('style marker not found')
-              s = s.replace(style_marker, css + '\n' + style_marker, 1)
-
-              old_markup = '<button type="button" class="room-spawn"><span class="room-food-eye" aria-hidden="true"></span><span class="room-spawn-text">目玉をうむ</span></button><p class="room-count">'
-              new_markup = '<button type="button" class="room-spawn"><span class="room-food-eye" aria-hidden="true"></span><span class="room-spawn-text">目玉をうむ</span></button><button type="button" class="room-restart">もう一回育てる</button><p class="room-count">'
-              if old_markup not in s:
-                  raise SystemExit('room markup target not found')
-              s = s.replace(old_markup, new_markup, 1)
-
-              old_vars = "spawnButton=room.querySelector('.room-spawn'),spawnText=room.querySelector('.room-spawn-text'),help="
-              new_vars = "spawnButton=room.querySelector('.room-spawn'),spawnText=room.querySelector('.room-spawn-text'),restartButton=room.querySelector('.room-restart'),help="
-              if old_vars not in s:
-                  raise SystemExit('variable target not found')
-              s = s.replace(old_vars, new_vars, 1)
-
-              old_listener = "spawnButton.addEventListener('click',spawn);room.querySelector('.room-close')"
-              new_listener = "spawnButton.addEventListener('click',spawn);restartButton.addEventListener('click',function(){eaten=0;born=0;tray.innerHTML='';save();renderEvolution(false);status.textContent='また、はじめから。';spawnButton.focus({preventScroll:true});});room.querySelector('.room-close')"
-              if old_listener not in s:
-                  raise SystemExit('listener target not found')
-              s = s.replace(old_listener, new_listener, 1)
-
-              p.write_text(s)
-          PY
-      - name: Commit source patch if needed
-        run: |
-          if ! git diff --quiet -- index.html; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add index.html
-            git commit -m "Add grow-again button to eye room"
-            git push
-          fi
       - name: Prepare the current site
         run: |
           mkdir -p public
