@@ -1,0 +1,48 @@
+name: Build and Deploy Water Blue Shiten
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create water-blue version from the current approved design
+        run: |
+          mkdir -p public
+          curl -fsSL "https://raw.githubusercontent.com/kanatama0416-glitch/shiten-test2/93246663e808f739feba769129b4593087c794cf/index.html" -o public/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('public/index.html')
+          s = p.read_text(encoding='utf-8')
+          replacements = {
+              '#ff4f87': '#58c8ff',
+              'rgba(255,79,135,.42)': 'rgba(88,200,255,.42)',
+              'rgba(255,79,135,.32)': 'rgba(88,200,255,.32)',
+          }
+          for old, new in replacements.items():
+              s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
