@@ -1,4 +1,4 @@
-name: Build and Deploy Water Blue Shiten
+name: Deploy Water Blue Shiten
 on:
   push:
     branches: [main]
@@ -18,27 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create water-blue version from viewpoint 01
+      - name: Prepare the current site
         run: |
           mkdir -p public
-          curl -fsSL "https://raw.githubusercontent.com/kanatama0416-glitch/shiten-test2/93246663e808f739feba769129b4593087c794cf/index.html" -o public/index.html
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('public/index.html')
-          s = p.read_text(encoding='utf-8')
-          replacements = {
-              '#ff4f87': '#58c8ff',
-              'rgba(255,79,135,.42)': 'rgba(88,200,255,.42)',
-              'rgba(255,79,135,.32)': 'rgba(88,200,255,.32)',
-              '.v:first-child b': '.v:nth-child(2) b',
-              '.v:first-child:before': '.v:nth-child(2):before',
-              '<a class="v" href="#" aria-current="page">': '<a class="v" href="https://kanatama0416-glitch.github.io/person1-shiten/">',
-              '<a class="v" href="person2.html">': '<a class="v" href="#" aria-current="page">',
-          }
-          for old, new in replacements.items():
-              s = s.replace(old, new)
-          p.write_text(s, encoding='utf-8')
-          PY
+          cp index.html public/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
