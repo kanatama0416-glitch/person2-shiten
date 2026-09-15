@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 concurrency:
@@ -18,77 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Permanently patch final evolution
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('index.html')
-          s = p.read_text()
-          marker_comment = '/* WINGLESS_GOD_SOURCE_V4 */'
-
-          if marker_comment not in s:
-              extra_css = r'''
-          /* WINGLESS_GOD_SOURCE_V4 */
-          .wing,.w-left,.w-right,.w-top,.w-bottom{display:none!important}
-          .stage-30 .room-scene{background:linear-gradient(#dff6ff,#cceeff)}
-          .stage-30 .room-scene:before{opacity:.18}
-          .stage-30 .room-evolution{top:38%;width:208px;height:156px;transform:translate(-50%,-50%)}
-          .stage-30 .room-pet{top:38%;width:132px;height:82px}
-          .stage-30 .room-pet:after{opacity:.06}
-          .stage-30 .room-pet-eye{box-shadow:0 0 0 3px #e4b20a;animation:godBlink 8s infinite}
-          .stage-30 .room-pet-iris{width:55px;height:55px}
-          .stage-30 .cloud{display:none!important}
-          .stage-30 .room-reaction{bottom:8px;font-size:14px;z-index:20}
-          .god-rays{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from -1deg,#e4b20a 0deg 1.2deg,transparent 1.2deg 14deg);opacity:.52;animation:rayPulse 3.2s ease-in-out infinite;z-index:0}
-          .god-halo{position:absolute;left:50%;top:50%;width:210px;height:144px;border:2px dotted #e4b20a;border-radius:50%;transform:translate(-50%,-50%);z-index:1}
-          .god-halo:before{content:'';position:absolute;inset:15px;border:2px solid #e4b20a;border-radius:50%}
-          .god-halo:after{content:'';position:absolute;left:50%;top:50%;width:224px;height:2px;background:linear-gradient(90deg,transparent 0 7%,#e4b20a 7% 42%,transparent 42% 58%,#e4b20a 58% 93%,transparent 93%);transform:translate(-50%,-50%)}
-          .god-axis{position:absolute;left:50%;top:50%;width:2px;height:170px;background:linear-gradient(transparent,#e4b20a 12% 42%,transparent 42% 58%,#e4b20a 58% 88%,transparent);transform:translate(-50%,-50%);z-index:1}
-          .god-ring{position:absolute;left:50%;top:50%;width:170px;height:170px;transform:translate(-50%,-50%);z-index:3}
-          .god-orbit-eye{position:absolute;left:50%;top:50%;width:31px;height:21px;border:2.5px solid #111;border-radius:50%;background:#fff;transform:translate(-50%,-50%) rotate(var(--a)) translateX(78px) rotate(var(--na));box-shadow:0 0 0 1.5px #fff}
-          .god-orbit-eye:before{content:'';position:absolute;left:50%;top:50%;width:13px;height:13px;border:2px solid #111;border-radius:50%;background:var(--room-blue);transform:translate(-50%,-50%)}
-          .god-orbit-eye:after{content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#111;transform:translate(-50%,-50%);box-shadow:4px -5px 0 -3px #fff}
-          .god-star{position:absolute;color:#e4b20a;font:900 17px/1 Arial,sans-serif;text-shadow:-1px 0 #111,0 1px #111,1px 0 #111,0 -1px #111;z-index:8;animation:starPulse 1.8s ease-in-out infinite}
-          .gs1{left:98px;top:-9px}.gs2{right:7px;top:31px;font-size:13px}.gs3{left:8px;bottom:25px;font-size:13px}.gs4{right:19px;bottom:17px;font-size:10px}
-          '''
-              style_marker = '.room-scene.evolving{'
-              if style_marker not in s:
-                  raise SystemExit('style marker not found')
-              s = s.replace(style_marker, extra_css + '\n' + style_marker, 1)
-
-              orbit_eyes = ''.join(
-                  '<i class="god-orbit-eye" style="--a:%ddeg;--na:%ddeg"></i>' % (i*45, -i*45)
-                  for i in range(8)
-              )
-              final_block = (
-                  "if(stage===30){evolution.classList.add('god');"
-                  "evolution.innerHTML='<i class=\"god-rays\"></i><i class=\"god-halo\"></i><i class=\"god-axis\"></i><span class=\"god-ring\">" + orbit_eyes + "</span><b class=\"god-star gs1\">✦</b><b class=\"god-star gs2\">✦</b><b class=\"god-star gs3\">✦</b><b class=\"god-star gs4\">✦</b>';"
-                  "status.textContent='なんだか、ぜんぶみえる。';"
-                  "help.innerHTML='もう、目玉をあげなくてもいいみたい。<br>いま、こっちを見ている。';"
-                  "next.textContent='';spawnButton.disabled=true;spawnText.textContent='みられている。';tray.innerHTML='';"
-                  "pet.setAttribute('aria-label','金色の後光と目玉衛星を持つ神々しい目玉');}"
-              )
-              pattern = r"if\(stage===30\)\{evolution\.classList\.add\('god'\);.*?pet\.setAttribute\('aria-label','[^']*'\);\}"
-              s, n = re.subn(pattern, lambda m: final_block, s, count=1, flags=re.S)
-              if n != 1:
-                  raise SystemExit('final evolution block not found')
-
-              cache_meta = '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
-              if 'http-equiv="Cache-Control"' not in s:
-                  s = s.replace('<head>', '<head>'+cache_meta, 1)
-              p.write_text(s)
-          PY
-      - name: Commit source patch if needed
-        run: |
-          if ! git diff --quiet -- index.html; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add index.html
-            git commit -m "Make final eye god wingless and fix overlap"
-            git push
-          fi
       - name: Prepare the current site
         run: |
           mkdir -p public
