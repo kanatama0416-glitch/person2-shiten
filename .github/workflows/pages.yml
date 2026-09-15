@@ -18,10 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare the current site
-        run: |
-          mkdir -p public
-          cp index.html public/index.html
+      - name: Build and validate current site
+        run: node build-stage10.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
