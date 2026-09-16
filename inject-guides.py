@@ -30,6 +30,9 @@ guide_addon = f'''<style>
   var attractScript=document.createElement('script');
   attractScript.src='https://kanatama0416-glitch.github.io/person1-shiten/eye-attract.js?v=0a1ae7d9';
   document.head.appendChild(attractScript);
+  var toggleScript=document.createElement('script');
+  toggleScript.src='https://kanatama0416-glitch.github.io/person1-shiten/eye-toggle-off.js?v=fb86c186';
+  document.head.appendChild(toggleScript);
   var room=document.getElementById('eyeRoom');
   if(!room)return;
   var tray=room.querySelector('.room-tray');
