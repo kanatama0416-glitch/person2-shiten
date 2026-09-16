@@ -27,6 +27,9 @@ guide_addon = f'''<style>
 @media(prefers-reduced-motion:reduce){{.room-food.shiten-feed-guide::before,.room-spawn.shiten-spawn-guide::before{{animation:none}}}}
 </style><script>
 (function(){{
+  var attractScript=document.createElement('script');
+  attractScript.src='https://kanatama0416-glitch.github.io/person1-shiten/eye-attract.js?v=c94b0648';
+  document.head.appendChild(attractScript);
   var room=document.getElementById('eyeRoom');
   if(!room)return;
   var tray=room.querySelector('.room-tray');
