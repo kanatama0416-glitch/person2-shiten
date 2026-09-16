@@ -36,11 +36,11 @@ jobs:
           trap 'kill $SERVER_PID' EXIT
           python browser-check.py
 
-      - name: Upload browser verification screenshots
+      - name: Upload local browser verification screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-check-screenshots
+          name: browser-check-screenshots-local
           path: browser-check-screenshots
           if-no-files-found: ignore
 
@@ -57,3 +57,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify deployed GitHub Pages in Chrome
+        env:
+          SHITEN_TEST_URL: ${{ steps.deployment.outputs.page_url }}
+          SHITEN_SCREEN_DIR: deployed-browser-check-screenshots
+        run: python browser-check.py
+
+      - name: Upload deployed browser verification screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-check-screenshots-deployed
+          path: deployed-browser-check-screenshots
+          if-no-files-found: ignore
