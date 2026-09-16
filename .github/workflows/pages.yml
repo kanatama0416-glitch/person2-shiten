@@ -20,6 +20,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and validate current site
         run: node build-stage10.js
+      - name: Publish unique v11 path
+        run: |
+          mkdir -p public/v11
+          cp public/index.html public/v11/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
