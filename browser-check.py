@@ -37,6 +37,12 @@ def wait_ready():
     ))
 
 
+def wait_intro_finished():
+    wait.until(lambda d: d.execute_script(
+        "return !document.getElementById('intro') && !document.body.classList.contains('intro-lock');"
+    ))
+
+
 def set_count(count):
     js("localStorage.setItem(arguments[0], String(arguments[1])); location.reload();", STORAGE_KEY, count)
     expected = 30 if count >= 30 else 20 if count >= 20 else 10 if count >= 10 else 0
@@ -44,6 +50,7 @@ def set_count(count):
         "var p=document.querySelector('.hero-pet'); return p && p.classList.contains('stage-'+arguments[0]);",
         expected,
     ))
+    wait_intro_finished()
     return expected
 
 
@@ -59,9 +66,20 @@ def hero_geometry_ok():
       return {petBottom:p.bottom,titleTop:h.top,left:p.left,right:p.right,vw:innerWidth};
     """)
 
+
+def visible_mini_eye_centers():
+    return js("""
+      return Array.from(document.querySelectorAll('.hero-evolution .pet-mini-outer')).map(function(el){
+        var r=el.getBoundingClientRect();
+        var s=getComputedStyle(el);
+        return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width,h:r.height,visibility:s.visibility,opacity:s.opacity};
+      });
+    """)
+
 try:
     driver.get(URL)
     wait_ready()
+    wait_intro_finished()
 
     expected_mini = {0: 0, 10: 5, 20: 8, 30: 8}
     for count in (0, 10, 20, 30):
@@ -71,6 +89,9 @@ try:
         geom = hero_geometry_ok()
         assert_true(geom['petBottom'] <= geom['titleTop'] + 0.5, f'stage {stage}: hero overlaps title: {geom}')
         assert_true(geom['left'] >= -0.5 and geom['right'] <= geom['vw'] + 0.5, f'stage {stage}: hero exceeds viewport: {geom}')
+        if stage > 0:
+            centers = visible_mini_eye_centers()
+            assert_true(all(c['w'] > 10 and c['h'] > 6 and c['visibility'] != 'hidden' and float(c['opacity']) > 0 for c in centers), f'stage {stage}: mini eyes are not visibly rendered: {centers}')
         driver.save_screenshot(str(SCREEN_DIR / f'stage-{stage}-390.png'))
 
     set_count(10)
@@ -122,6 +143,6 @@ try:
     assert_true(nav_count == 5, f'expected 5 navigation links, got {nav_count}')
     assert_true(about_href and 'about-shiten' in about_href, f'About link missing or wrong: {about_href}')
 
-    print('Browser smoke checks passed at 390x844: saved stages, 5-eye Lv.10 room, live sync, restart sync, title separation, touch rules, navigation.')
+    print('Browser visual checks passed after intro at 390x844: saved stages, visible evolved hero, 5-eye Lv.10 room, live sync, restart sync, title separation, touch rules, navigation.')
 finally:
     driver.quit()
