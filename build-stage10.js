@@ -16,9 +16,9 @@ if (!html.includes(stage10Marker)) {
 
   const cssPattern = /\/\* STAGE10_SPROUT_FROM_MAIN_EYE_V2 \*\/[\s\S]*?(?=\.orbit-line\{)/;
   const css = `/* STAGE10_SPROUT_SVG_V3 */
-.stage-10 .room-evolution{top:50%;width:260px;height:190px;overflow:visible}
+.stage-10 .room-evolution{top:50%;width:220px;height:160px;overflow:visible}
 .eye-room .room-sprouts{display:block;width:100%;height:100%;overflow:visible}
-.eye-room .room-sprout-stem{stroke:#111;stroke-width:5;stroke-linecap:round}
+.eye-room .room-sprout-stem{stroke:#111;stroke-width:4;stroke-linecap:round}
 .eye-room .room-sprout-eye .outer{fill:#fff;stroke:#111;stroke-width:3}
 .eye-room .room-sprout-eye .iris{fill:var(--room-blue);stroke:#111;stroke-width:2}
 .eye-room .room-sprout-eye .pupil{fill:#111}
@@ -26,14 +26,19 @@ if (!html.includes(stage10Marker)) {
 `;
   html = html.replace(cssPattern, css);
 
-  const points = [
-    [22,90,-8], [68,24,-10], [130,10,2], [192,24,10],
-    [238,90,8], [230,145,4], [30,145,-4]
+  // Five balanced sprouts. Each stem begins near the large eye's upper outline,
+  // then continues behind the eye so it reads as growing out of the eye itself.
+  const sprouts = [
+    {sx:31, sy:72, x:24,  y:72, r:-15},
+    {sx:70, sy:39, x:62,  y:27, r:-9},
+    {sx:110,sy:27, x:110, y:15, r:0},
+    {sx:150,sy:39, x:158, y:27, r:9},
+    {sx:189,sy:72, x:196, y:72, r:15}
   ];
-  let svg = '<svg class="room-sprouts" viewBox="0 0 260 190" aria-hidden="true">';
-  for (const [x,y] of points) svg += `<line class="room-sprout-stem" x1="130" y1="95" x2="${x}" y2="${y}"/>`;
-  for (const [x,y,r] of points) {
-    svg += `<g class="room-sprout-eye" transform="translate(${x} ${y}) rotate(${r})"><ellipse class="outer" rx="22" ry="14"/><circle class="iris" r="8"/><circle class="pupil" r="3.3"/><circle class="shine" cx="3" cy="-3" r="1.7"/></g>`;
+  let svg = '<svg class="room-sprouts" viewBox="0 0 220 160" aria-hidden="true">';
+  for (const p of sprouts) svg += `<line class="room-sprout-stem" x1="${p.sx}" y1="${p.sy}" x2="${p.x}" y2="${p.y}"/>`;
+  for (const p of sprouts) {
+    svg += `<g class="room-sprout-eye" transform="translate(${p.x} ${p.y}) rotate(${p.r})"><ellipse class="outer" rx="20" ry="12.5"/><circle class="iris" r="7.5"/><circle class="pupil" r="3.1"/><circle class="shine" cx="2.8" cy="-2.8" r="1.5"/></g>`;
   }
   svg += '</svg>';
 
@@ -88,7 +93,7 @@ if (!html.includes(pageRenderMarker)) {
   var pageHero=document.querySelector('.hero'),pageGrowth=null;
   if(pageHero){pageGrowth=document.createElement('div');pageGrowth.className='page-growth-layer';pageGrowth.setAttribute('aria-hidden','true');var pageTitle=pageHero.querySelector('h1');pageHero.insertBefore(pageGrowth,pageTitle||null);}
   function pageEye(x,y,r){return '<g class="page-growth-eye" transform="translate('+x+' '+y+') rotate('+r+')"><ellipse class="outer" rx="23" ry="14.5"/><circle class="iris" r="8.5"/><circle class="pupil" r="3.5"/><circle class="shine" cx="3.2" cy="-3.2" r="1.8"/></g>';}
-  function pageStage10(){var pts=[[45,104,-8],[86,35,-10],[160,17,2],[234,35,10],[275,104,8],[248,170,4],[72,170,-4]],h='<svg viewBox="0 0 320 220">';for(var i=0;i<pts.length;i++)h+='<line class="page-growth-stem" x1="160" y1="100" x2="'+pts[i][0]+'" y2="'+pts[i][1]+'"/>';for(var j=0;j<pts.length;j++)h+=pageEye(pts[j][0],pts[j][1],pts[j][2]);return h+'</svg>';}
+  function pageStage10(){var pts=[[60,82,-15],[108,34,-9],[160,22,0],[212,34,9],[260,82,15]],starts=[[91,88],[122,62],[160,55],[198,62],[229,88]],h='<svg viewBox="0 0 320 220">';for(var i=0;i<pts.length;i++)h+='<line class="page-growth-stem" x1="'+starts[i][0]+'" y1="'+starts[i][1]+'" x2="'+pts[i][0]+'" y2="'+pts[i][1]+'"/>';for(var j=0;j<pts.length;j++)h+=pageEye(pts[j][0],pts[j][1],pts[j][2]);return h+'</svg>';}
   function pageStage20(){var pts=[[160,18,0],[241,39,10],[292,100,2],[243,164,-8],[160,190,0],[77,164,8],[28,100,-2],[79,39,-10]],h='<svg viewBox="0 0 320 220"><ellipse class="page-orbit-line" cx="160" cy="100" rx="143" ry="72"/><ellipse class="page-orbit-line alt" cx="160" cy="100" rx="118" ry="91" transform="rotate(-12 160 100)"/>';for(var i=0;i<pts.length;i++)h+=pageEye(pts[i][0],pts[i][1],pts[i][2]);return h+'</svg>';}
   function pageStage30(){var pts=[[160,16,0],[244,35,9],[294,100,0],[244,165,-9],[160,190,0],[76,165,9],[26,100,0],[76,35,-9]],h='<svg viewBox="0 0 320 220">';for(var a=0;a<16;a++){var ang=a*Math.PI/8,x1=160+118*Math.cos(ang),y1=100+82*Math.sin(ang),x2=160+150*Math.cos(ang),y2=100+104*Math.sin(ang);h+='<line class="page-god-ray" x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/>';}h+='<ellipse class="page-god-halo dotted" cx="160" cy="100" rx="146" ry="88"/><ellipse class="page-god-halo" cx="160" cy="100" rx="121" ry="70"/>';for(var i=0;i<pts.length;i++)h+=pageEye(pts[i][0],pts[i][1],pts[i][2]);h+='<path class="page-god-star" d="M160 1 l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/><path class="page-god-star" d="M305 54 l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path class="page-god-star" d="M18 150 l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>';return h+'</svg>';}
   function renderPageEvolution(s){document.documentElement.dataset.eyeStage=String(s);if(!pageHero||!pageGrowth)return;pageGrowth.innerHTML=s===10?pageStage10():s===20?pageStage20():s===30?pageStage30():'';}
@@ -109,7 +114,7 @@ for (const marker of [stage10Marker,pageCssMarker,pageBootstrapMarker,pageRender
   if (!html.includes(marker)) throw new Error(`missing required marker: ${marker}`);
 }
 if ((html.match(/page-growth-eye/g) || []).length < 4) throw new Error('page growth eye rendering missing');
-if ((html.match(/room-sprout-eye/g) || []).length < 7) throw new Error('not all room sprout eyes rendered');
+if ((html.match(/room-sprout-eye/g) || []).length < 5) throw new Error('not all room sprout eyes rendered');
 
 const outer = html.match(/<body><script>\n([\s\S]*)\n<\/script><\/body><\/html>\s*$/);
 if (!outer) throw new Error('outer script not found for syntax validation');
