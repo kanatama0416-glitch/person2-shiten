@@ -18,11 +18,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build and validate current site
+      - name: Build current site
         run: node build-stage10.js
-      - name: Publish cache-proof files
+      - name: Force final level-10 geometry on root page
         run: |
-          cp public/index.html public/v12.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('public/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('.stage-10 .room-evolution{top:50%;width:220px;height:160px;overflow:visible}', '.stage-10 .room-evolution{top:48%;width:240px;height:170px;overflow:visible}')
+          s=s.replace('.eye-room,.eye-room *{touch-action:manipulation}', '.eye-room,.eye-room *{touch-action:manipulation;-webkit-user-select:none;user-select:none}')
+          room = '''if(stage===10){evolution.innerHTML='<svg class="room-sprouts" viewBox="0 0 240 170" aria-hidden="true"><line class="room-sprout-stem" x1="40" y1="83" x2="10" y2="85"/><line class="room-sprout-stem" x1="82" y1="50" x2="67" y2="17"/><line class="room-sprout-stem" x1="120" y1="35" x2="120" y2="4"/><line class="room-sprout-stem" x1="158" y1="50" x2="173" y2="17"/><line class="room-sprout-stem" x1="200" y1="83" x2="230" y2="85"/><g class="room-sprout-eye" transform="translate(10 85) rotate(-16)"><ellipse class="outer" rx="17.5" ry="11"/><circle class="iris" r="6.8"/><circle class="pupil" r="3"/><circle class="shine" cx="2.6" cy="-2.6" r="1.4"/></g><g class="room-sprout-eye" transform="translate(67 17) rotate(-10)"><ellipse class="outer" rx="17.5" ry="11"/><circle class="iris" r="6.8"/><circle class="pupil" r="3"/><circle class="shine" cx="2.6" cy="-2.6" r="1.4"/></g><g class="room-sprout-eye" transform="translate(120 4) rotate(0)"><ellipse class="outer" rx="17.5" ry="11"/><circle class="iris" r="6.8"/><circle class="pupil" r="3"/><circle class="shine" cx="2.6" cy="-2.6" r="1.4"/></g><g class="room-sprout-eye" transform="translate(173 17) rotate(10)"><ellipse class="outer" rx="17.5" ry="11"/><circle class="iris" r="6.8"/><circle class="pupil" r="3"/><circle class="shine" cx="2.6" cy="-2.6" r="1.4"/></g><g class="room-sprout-eye" transform="translate(230 85) rotate(16)"><ellipse class="outer" rx="17.5" ry="11"/><circle class="iris" r="6.8"/><circle class="pupil" r="3"/><circle class="shine" cx="2.6" cy="-2.6" r="1.4"/></g></svg>';status.textContent='なんだか、よくみえる。';help.innerHTML='たくさん食べて、進化したみたい。<br>目玉から、にょきにょき生えてきた。';next.textContent='20こで次の進化。';pet.setAttribute('aria-label','大きな目玉から小さな目玉がにょきにょき生えた目玉');}'''
+          pat=r"if\(stage===10\)\{evolution\.innerHTML='\<svg class=\"room-sprouts\"[\s\S]*?pet\.setAttribute\('aria-label','大きな目玉から小さな目玉がにょきにょき生えた目玉'\);\}"
+          s,n=re.subn(pat, room, s, count=1)
+          if n!=1: raise SystemExit('stage10 room replacement failed')
+          page = '''function pageStage10(){var pts=[[54,102,-16],[108,35,-10],[160,18,0],[212,35,10],[266,102,16]],starts=[[94,101],[126,64],[160,57],[194,64],[226,101]],h='<svg viewBox="0 0 320 220">';for(var i=0;i<pts.length;i++)h+='<line class="page-growth-stem" x1="'+starts[i][0]+'" y1="'+starts[i][1]+'" x2="'+pts[i][0]+'" y2="'+pts[i][1]+'"/>';for(var j=0;j<pts.length;j++)h+=pageEye(pts[j][0],pts[j][1],pts[j][2]);return h+'</svg>';}\n  function pageStage20'''
+          s,n=re.subn(r"function pageStage10\(\)\{[\s\S]*?return h\+'</svg>';\}\n  function pageStage20", page, s, count=1)
+          if n!=1: raise SystemExit('page stage10 replacement failed')
+          s=s.replace('</head>', '<meta name="shiten-build" content="v13-root"><!-- SHITEN_BUILD_V13_ROOT --></head>', 1)
+          if s.count('<g class="room-sprout-eye"') != 5: raise SystemExit('room sprout count is not 5')
+          for bad in ['230 145','30 145','238 90']:
+              if bad in s: raise SystemExit('old lower sprout geometry remains: '+bad)
+          if 'touch-action:manipulation;-webkit-user-select:none;user-select:none' not in s: raise SystemExit('room zoom guard missing')
+          p.write_text(s, encoding='utf-8')
+          print('v13 root patch validated')
+          PY
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
