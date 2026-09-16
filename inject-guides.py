@@ -28,7 +28,7 @@ guide_addon = f'''<style>
 </style><script>
 (function(){{
   var attractScript=document.createElement('script');
-  attractScript.src='https://kanatama0416-glitch.github.io/person1-shiten/eye-attract.js?v=95568811';
+  attractScript.src='https://kanatama0416-glitch.github.io/person1-shiten/eye-attract.js?v=ce405d8f';
   document.head.appendChild(attractScript);
   var room=document.getElementById('eyeRoom');
   if(!room)return;
