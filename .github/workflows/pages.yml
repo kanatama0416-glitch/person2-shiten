@@ -23,6 +23,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Apply 5-feed evolution milestones
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_required(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'missing expected text in {path}: {old}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          replace_required(
+              'build-stage10.js',
+              'function shitenStageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}',
+              'function shitenStageFor(n){return n>=15?30:n>=10?20:n>=5?10:0;}'
+          )
+          replace_required('build-stage10.js', "next.textContent='20こで次の進化。'", "next.textContent='10こで次の進化。'")
+          replace_required('build-stage10.js', "next.textContent='30こで最終進化。'", "next.textContent='15こで最終進化。'")
+
+          replace_required('index.html', "level.textContent='Lv.'+stage", "level.textContent='Lv.'+(stage===30?15:stage===20?10:stage===10?5:0)")
+          replace_required('index.html', '10こで進化。まだ育つかも。', '5こで進化。まだ育つかも。')
+          replace_required('index.html', '20こで次の進化。', '10こで次の進化。')
+          replace_required('index.html', '30こで最終進化。', '15こで最終進化。')
+
+          replace_required(
+              'browser-check.py',
+              'expected = 30 if count >= 30 else 20 if count >= 20 else 10 if count >= 10 else 0',
+              'expected = 30 if count >= 15 else 20 if count >= 10 else 10 if count >= 5 else 0'
+          )
+          replace_required('browser-check.py', 'for count in (0, 10, 20, 30):', 'for count in (0, 5, 10, 15):')
+          replace_required('browser-check.py', '    set_count(10)\n', '    set_count(5)\n')
+          replace_required('browser-check.py', '    set_count(9)\n', '    set_count(4)\n')
+          replace_required("browser-check.py", "localStorage.getItem(arguments[0])==='10'", "localStorage.getItem(arguments[0])==='5'")
+          replace_required('browser-check.py', '    set_count(30)\n', '    set_count(15)\n')
+          PY
+
       - name: Build and validate site
         run: node build-stage10.js
 
