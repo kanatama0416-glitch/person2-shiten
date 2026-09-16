@@ -5,7 +5,7 @@ const sourcePath = process.argv[2] || 'index.html';
 const outPath = process.argv[3] || 'public/index.html';
 let html = fs.readFileSync(sourcePath, 'utf8');
 
-const MARKER = 'SHITEN_SHARED_PET_V14';
+const MARKER = 'SHITEN_SHARED_PET_V15';
 if (html.includes(MARKER)) {
   throw new Error('source already contains generated shared-pet patch');
 }
@@ -17,7 +17,7 @@ html = html.replace(oldStage10Css, '');
 
 // Shared renderer styles are used by both the room pet and the hero pet.
 const sharedCss = `
-/* SHITEN_SHARED_PET_V14 */
+/* SHITEN_SHARED_PET_V15 */
 .eye-room,.eye-room *{-webkit-tap-highlight-color:transparent}
 .eye-room{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .eye-room button,.eye-room .room-controls,.eye-room .room-scene{touch-action:manipulation}
@@ -58,7 +58,7 @@ html = html.replace(styleEnd, sharedCss + '\n' + styleEnd);
 
 // One SVG generator for room + page. The five level-10 eyes all emerge from the upper half.
 const sharedJs = String.raw`
-/* SHITEN_SHARED_PET_RENDER_V14 */
+/* SHITEN_SHARED_PET_RENDER_V15 */
 var SHITEN_EYE_STORAGE_KEY='shiten02-eye-eaten-v2';
 function shitenStageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}
 function shitenMiniEye(x,y,r,scale){
@@ -107,6 +107,10 @@ function shitenRenderSavedHeroPet(){
   shitenRenderHeroPet(shitenStageFor(eaten));
 }
 shitenRenderSavedHeroPet();
+window.addEventListener('pageshow',shitenRenderSavedHeroPet);
+window.addEventListener('focus',shitenRenderSavedHeroPet);
+window.addEventListener('storage',function(e){if(e.key===SHITEN_EYE_STORAGE_KEY)shitenRenderSavedHeroPet();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)shitenRenderSavedHeroPet();});
 `;
 
 const roomScriptStart = 'const roomScript=`<script>\nfunction installEyeRoom(){';
@@ -133,12 +137,13 @@ html = html.replace(renderNeedle, "var newStage=stageFor(eaten),changed=newStage
 
 // Validation: exactly five level-10 mini eyes are defined, one shared renderer is used,
 // and the old page-growth-layer implementation is absent.
-if (!html.includes(MARKER) || !html.includes('SHITEN_SHARED_PET_RENDER_V14')) throw new Error('shared pet markers missing');
+if (!html.includes(MARKER) || !html.includes('SHITEN_SHARED_PET_RENDER_V15')) throw new Error('shared pet markers missing');
 if (!html.includes("var p=[[58,78,-15],[111,39,-9],[160,23,1],[209,39,10],[262,78,15]]")) throw new Error('level-10 five-eye geometry missing');
 if (html.includes('page-growth-layer') || html.includes('PAGE_EVOLUTION_REFLECT_V1')) throw new Error('legacy page growth layer remains');
 if ((html.match(/shitenEvolutionSvg\(/g) || []).length < 5) throw new Error('shared renderer not reused enough');
 if (!html.includes('touch-action:manipulation') || !html.includes('.eye-room .room-food{touch-action:none')) throw new Error('room touch guard missing');
 if (!html.includes('shitenRenderHeroPet(stage);')) throw new Error('live hero sync missing');
+if (!html.includes("window.addEventListener('pageshow',shitenRenderSavedHeroPet)")) throw new Error('page restore sync missing');
 if (!html.includes('room-restart') || !html.includes('shiten02-eye-eaten-v2')) throw new Error('existing room persistence/restart missing');
 
 const outer = html.match(/<body><script>\n([\s\S]*)\n<\/script><\/body><\/html>\s*$/);
@@ -147,4 +152,4 @@ new Function(outer[1]);
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, html);
-console.log('Built and validated shared room/page pet renderer v14.');
+console.log('Built and validated shared room/page pet renderer v15 with page-restore sync.');
