@@ -9,6 +9,7 @@ const stage10Marker = '/* STAGE10_SPROUT_SVG_V3 */';
 const pageCssMarker = '/* PAGE_EVOLUTION_REFLECT_V1 */';
 const pageBootstrapMarker = 'PAGE_STAGE_BOOTSTRAP_V1';
 const pageRenderMarker = 'PAGE_EVOLUTION_RENDER_V1';
+const roomTapMarker = '/* EYE_ROOM_NO_DOUBLE_TAP_ZOOM_V10 */';
 
 // 1) Keep the room's level-10 form isolated in SVG so generic CSS cannot break the page.
 if (!html.includes(stage10Marker)) {
@@ -26,8 +27,8 @@ if (!html.includes(stage10Marker)) {
 `;
   html = html.replace(cssPattern, css);
 
-  // Five balanced sprouts. Each stem begins near the large eye's upper outline,
-  // then continues behind the eye so it reads as growing out of the eye itself.
+  // Five balanced sprouts. Each stem starts just behind the upper half of the main eye,
+  // so only the outward segment is visible and it reads as growing directly from the eye.
   const sprouts = [
     {sx:31, sy:72, x:24,  y:72, r:-15},
     {sx:70, sy:39, x:62,  y:27, r:-9},
@@ -79,6 +80,13 @@ html[data-eye-stage="30"] .hero>.eye{box-shadow:0 0 0 3px #e4b20a}
   html = html.replace(cssMarker, pageCss + cssMarker);
 }
 
+// 3) Disable iOS/Safari double-tap zoom only inside the eye-room UI.
+if (!html.includes(roomTapMarker)) {
+  const roomCssNeedle = '.eye-room *{box-sizing:border-box}';
+  if (!html.includes(roomCssNeedle)) throw new Error('eye-room CSS target not found');
+  html = html.replace(roomCssNeedle, `${roomTapMarker}\n.eye-room,.eye-room *{touch-action:manipulation}\n.room-food{touch-action:none}\n${roomCssNeedle}`);
+}
+
 if (!html.includes(pageBootstrapMarker)) {
   const oldHeadBuild = "</style>`;html=html.replace('</head>',roomStyle+'</head>');";
   const newHeadBuild = "</style>`;const pageStageBootstrap=`<script>/* PAGE_STAGE_BOOTSTRAP_V1 */(function(){var n=0;try{n=Math.max(0,parseInt(localStorage.getItem('shiten02-eye-eaten-v2')||'0',10)||0)}catch(e){}document.documentElement.dataset.eyeStage=String(n>=30?30:n>=20?20:n>=10?10:0)})();<\\/script>`;html=html.replace('</head>',roomStyle+pageStageBootstrap+'</head>');";
@@ -110,11 +118,12 @@ if (!html.includes('renderPageEvolution(stage);')) {
 
 // Validation: preserve existing features and guard against the previous selector collision.
 if (/(?<![A-Za-z0-9_-])\.(?:b[1-7]|s[1-7])\{/.test(html)) throw new Error('unsafe generic stage10 selectors remain');
-for (const marker of [stage10Marker,pageCssMarker,pageBootstrapMarker,pageRenderMarker,'renderPageEvolution(stage);','room-restart','金色の後光と目玉衛星']) {
+for (const marker of [stage10Marker,pageCssMarker,pageBootstrapMarker,pageRenderMarker,roomTapMarker,'renderPageEvolution(stage);','room-restart','金色の後光と目玉衛星']) {
   if (!html.includes(marker)) throw new Error(`missing required marker: ${marker}`);
 }
 if ((html.match(/page-growth-eye/g) || []).length < 4) throw new Error('page growth eye rendering missing');
 if ((html.match(/room-sprout-eye/g) || []).length < 5) throw new Error('not all room sprout eyes rendered');
+if (!html.includes('touch-action:manipulation')) throw new Error('room double-tap zoom guard missing');
 
 const outer = html.match(/<body><script>\n([\s\S]*)\n<\/script><\/body><\/html>\s*$/);
 if (!outer) throw new Error('outer script not found for syntax validation');
@@ -122,4 +131,4 @@ new Function(outer[1]);
 
 fs.mkdirSync(require('path').dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, html);
-console.log('Built and validated room + page growth reflection.');
+console.log('Built and validated room + page growth reflection + room zoom guard v10.');
