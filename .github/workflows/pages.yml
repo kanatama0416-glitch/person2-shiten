@@ -26,6 +26,24 @@ jobs:
       - name: Build and validate site
         run: node build-stage10.js
 
+      - name: Install browser test dependency
+        run: python -m pip install --disable-pip-version-check selenium
+
+      - name: Verify mobile pet behavior in Chrome
+        run: |
+          python -m http.server 8000 --directory public >/tmp/shiten-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          python browser-check.py
+
+      - name: Upload browser verification screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-check-screenshots
+          path: browser-check-screenshots
+          if-no-files-found: ignore
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
