@@ -27,7 +27,7 @@ jobs:
         run: |
           BASE=57c51c14543080d8b8f2ef5a0a1164bbccabf582
           git fetch --depth=1 origin "$BASE"
-          git show "$BASE:index.html" > index.html
+          git show "${BASE}:index.html" > index.html
           python - <<'PY'
           from pathlib import Path
 
@@ -41,11 +41,11 @@ jobs:
           # Keep the current tap behavior from the latest wrapper change.
           index = Path('index.html')
           text = index.read_text(encoding='utf-8')
-          marker = 'document.open();document.write(html);document.close();'
+          marker = 'document.open();document.write(html);document.close()'
           if marker not in text:
               raise SystemExit('scroll patch marker missing')
           scroll_patch = "html=html.replace('id=\"secretToggle\"','id=\"secretToggle\" onpointerdown=\"window.scrollTo(0,0)\"').replace('id=\"tearToggle\"','id=\"tearToggle\" onpointerdown=\"window.scrollTo(0,0)\"');" + marker
-          text = text.replace(marker, scroll_patch)
+          text = text.replace(marker, scroll_patch, 1)
           index.write_text(text, encoding='utf-8')
 
           # Evolution milestones: same three visuals, reached after 5 / 10 / 15 feeds.
