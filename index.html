@@ -57,7 +57,8 @@
 })();
 <\/script>`;
 
-    const hook=`html=html.replace('</body>',${JSON.stringify(guideAddon)}+'</body>');`;
+    const addonLiteral=JSON.stringify(guideAddon).replace(/<\/script/gi,'<\\/script');
+    const hook=`html=html.replace('</body>',${addonLiteral}+'</body>');`;
     source=source.replace(pattern,m=>hook+m);
     document.open();document.write(source);document.close();
   }catch(e){
