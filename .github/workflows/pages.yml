@@ -23,8 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply 5-feed evolution milestones
+      - name: Prepare current site with 5-feed evolution milestones
         run: |
+          BASE=57c51c14543080d8b8f2ef5a0a1164bbccabf582
+          git fetch --depth=1 origin "$BASE"
+          git show "$BASE:index.html" > index.html
           python - <<'PY'
           from pathlib import Path
 
@@ -35,6 +38,17 @@ jobs:
                   raise SystemExit(f'missing expected text in {path}: {old}')
               p.write_text(text.replace(old, new), encoding='utf-8')
 
+          # Keep the current tap behavior from the latest wrapper change.
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+          marker = 'document.open();document.write(html);document.close();'
+          if marker not in text:
+              raise SystemExit('scroll patch marker missing')
+          scroll_patch = "html=html.replace('id=\"secretToggle\"','id=\"secretToggle\" onpointerdown=\"window.scrollTo(0,0)\"').replace('id=\"tearToggle\"','id=\"tearToggle\" onpointerdown=\"window.scrollTo(0,0)\"');" + marker
+          text = text.replace(marker, scroll_patch)
+          index.write_text(text, encoding='utf-8')
+
+          # Evolution milestones: same three visuals, reached after 5 / 10 / 15 feeds.
           replace_required(
               'build-stage10.js',
               'function shitenStageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}',
@@ -48,6 +62,7 @@ jobs:
           replace_required('index.html', '20こで次の進化。', '10こで次の進化。')
           replace_required('index.html', '30こで最終進化。', '15こで最終進化。')
 
+          # Keep the browser verification aligned with the new feed counts.
           replace_required(
               'browser-check.py',
               'expected = 30 if count >= 30 else 20 if count >= 20 else 10 if count >= 10 else 0',
