@@ -11,10 +11,10 @@
 <script>
 (async()=>{
   try{
-    let source=await(await fetch('https://raw.githubusercontent.com/kanatama0416-glitch/person2-shiten/57c51c14543080d8b8f2ef5a0a1164bbccabf582/index.html',{cache:'no-store'})).text();
-    const marker='document.open();document.write(html);document.close();';
-    if(!source.includes(marker))throw new Error('patch marker not found');
-    source=source.replace(marker,`html=html.replace('id="secretToggle"','id="secretToggle" onpointerdown="window.scrollTo(0,0)"').replace('id="tearToggle"','id="tearToggle" onpointerdown="window.scrollTo(0,0)"');${marker}`);
+    let source=await(await fetch('https://raw.githubusercontent.com/kanatama0416-glitch/person2-shiten/57c51c14543080d8f2ef5a0a1164bbccabf582/index.html',{cache:'no-store'})).text();
+    const pattern=/document\.open\(\);document\.write\(html\);document\.close\(\);?/;
+    if(!pattern.test(source))throw new Error('patch marker not found');
+    source=source.replace(pattern,m=>`html=html.replace('id="secretToggle"','id="secretToggle" onpointerdown="window.scrollTo(0,0)"').replace('id="tearToggle"','id="tearToggle" onpointerdown="window.scrollTo(0,0)"');${m}`);
     document.open();document.write(source);document.close();
   }catch(e){
     document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;font-family:system-ui">ページを読み込めませんでした。</div>';
