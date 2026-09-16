@@ -38,14 +38,14 @@ jobs:
                   raise SystemExit(f'missing expected text in {path}: {old}')
               p.write_text(text.replace(old, new), encoding='utf-8')
 
-          # Keep the current tap behavior from the latest wrapper change.
+          # Scroll to the top from the same click event that starts the eye gimmick.
           index = Path('index.html')
           text = index.read_text(encoding='utf-8')
           marker = 'document.open();document.write(html);document.close()'
           if marker not in text:
               raise SystemExit('scroll patch marker missing')
-          scroll_patch = "html=html.replace('id=\"secretToggle\"','id=\"secretToggle\" onpointerdown=\"window.scrollTo(0,0)\"').replace('id=\"tearToggle\"','id=\"tearToggle\" onpointerdown=\"window.scrollTo(0,0)\"');" + marker
-          text = text.replace(marker, scroll_patch, 1)
+          hook = "html=html.replace('</body>','<script>document.addEventListener(\"click\",function(e){var b=e.target.closest&&e.target.closest(\"#secretToggle,#tearToggle\");if(b)window.scrollTo(0,0)},true);<\\/script></body>');"
+          text = text.replace(marker, hook + marker, 1)
           index.write_text(text, encoding='utf-8')
 
           # Evolution milestones: same three visuals, reached after 5 / 10 / 15 feeds.
