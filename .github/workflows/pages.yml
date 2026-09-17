@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare current site with 5-feed evolution milestones
+      - name: Prepare current site with 2-5-10 evolution milestones
         run: |
           BASE=57c51c14543080d8b8f2ef5a0a1164bbccabf582
           git fetch --depth=1 origin "$BASE"
@@ -48,31 +48,31 @@ jobs:
           text = text.replace(marker, hook + marker, 1)
           index.write_text(text, encoding='utf-8')
 
-          # Evolution milestones: same three visuals, reached after 5 / 10 / 15 feeds.
+          # Evolution milestones: keep the same three visuals, reached after 2 / 5 / 10 feeds.
           replace_required(
               'build-stage10.js',
               'function shitenStageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}',
-              'function shitenStageFor(n){return n>=15?30:n>=10?20:n>=5?10:0;}'
+              'function shitenStageFor(n){return n>=10?30:n>=5?20:n>=2?10:0;}'
           )
-          replace_required('build-stage10.js', "next.textContent='20こで次の進化。'", "next.textContent='10こで次の進化。'")
-          replace_required('build-stage10.js', "next.textContent='30こで最終進化。'", "next.textContent='15こで最終進化。'")
+          replace_required('build-stage10.js', "next.textContent='20こで次の進化。'", "next.textContent='5こで次の進化。'")
+          replace_required('build-stage10.js', "next.textContent='30こで最終進化。'", "next.textContent='10こで最終進化。'")
 
-          replace_required('index.html', "level.textContent='Lv.'+stage", "level.textContent='Lv.'+(stage===30?15:stage===20?10:stage===10?5:0)")
-          replace_required('index.html', '10こで進化。まだ育つかも。', '5こで進化。まだ育つかも。')
-          replace_required('index.html', '20こで次の進化。', '10こで次の進化。')
-          replace_required('index.html', '30こで最終進化。', '15こで最終進化。')
+          replace_required('index.html', "level.textContent='Lv.'+stage", "level.textContent='Lv.'+Math.min(eaten,10)")
+          replace_required('index.html', '10こで進化。まだ育つかも。', '2こで進化。まだ育つかも。')
+          replace_required('index.html', '20こで次の進化。', '5こで次の進化。')
+          replace_required('index.html', '30こで最終進化。', '10こで最終進化。')
 
-          # Keep the browser verification aligned with the new feed counts.
+          # Keep the browser verification aligned with the 2 / 5 / 10 feed counts.
           replace_required(
               'browser-check.py',
               'expected = 30 if count >= 30 else 20 if count >= 20 else 10 if count >= 10 else 0',
-              'expected = 30 if count >= 15 else 20 if count >= 10 else 10 if count >= 5 else 0'
+              'expected = 30 if count >= 10 else 20 if count >= 5 else 10 if count >= 2 else 0'
           )
-          replace_required('browser-check.py', 'for count in (0, 10, 20, 30):', 'for count in (0, 5, 10, 15):')
-          replace_required('browser-check.py', '    set_count(10)\n', '    set_count(5)\n')
-          replace_required('browser-check.py', '    set_count(9)\n', '    set_count(4)\n')
-          replace_required("browser-check.py", "localStorage.getItem(arguments[0])==='10'", "localStorage.getItem(arguments[0])==='5'")
-          replace_required('browser-check.py', '    set_count(30)\n', '    set_count(15)\n')
+          replace_required('browser-check.py', 'for count in (0, 10, 20, 30):', 'for count in (0, 2, 5, 10):')
+          replace_required('browser-check.py', '    set_count(10)\n', '    set_count(2)\n')
+          replace_required('browser-check.py', '    set_count(9)\n', '    set_count(1)\n')
+          replace_required("browser-check.py", "localStorage.getItem(arguments[0])==='10'", "localStorage.getItem(arguments[0])==='2'")
+          replace_required('browser-check.py', '    set_count(30)\n', '    set_count(10)\n')
           PY
 
       - name: Build and validate site
@@ -80,6 +80,9 @@ jobs:
 
       - name: Inject idle pet guides
         run: python inject-guides.py public/index.html
+
+      - name: Inject desktop drag fix
+        run: python inject-desktop-drag.py public/index.html
 
       - name: Install browser test dependency
         run: python -m pip install --disable-pip-version-check selenium
@@ -91,13 +94,16 @@ jobs:
           trap 'kill $SERVER_PID' EXIT
           python browser-check.py
           SHITEN_TEST_URL=http://127.0.0.1:8000/ python verify-guides.py
+          SHITEN_TEST_URL=http://127.0.0.1:8000/ python desktop-browser-check.py
 
       - name: Upload local browser verification screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-check-screenshots-local
-          path: browser-check-screenshots
+          path: |
+            browser-check-screenshots
+            desktop-browser-check-screenshots
           if-no-files-found: ignore
 
       - name: Setup Pages
@@ -125,10 +131,18 @@ jobs:
           SHITEN_TEST_URL: ${{ steps.deployment.outputs.page_url }}
         run: python verify-guides.py
 
+      - name: Verify deployed desktop drag-and-drop
+        env:
+          SHITEN_TEST_URL: ${{ steps.deployment.outputs.page_url }}
+          SHITEN_DESKTOP_SCREEN_DIR: deployed-desktop-browser-check-screenshots
+        run: python desktop-browser-check.py
+
       - name: Upload deployed browser verification screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-check-screenshots-deployed
-          path: deployed-browser-check-screenshots
+          path: |
+            deployed-browser-check-screenshots
+            deployed-desktop-browser-check-screenshots
           if-no-files-found: ignore
