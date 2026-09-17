@@ -17,11 +17,11 @@
     const timingPatch="html=html.replace('},1050);introEye.animate','},250);introEye.animate').replaceAll('duration:1650,delay:1250','duration:650,delay:250').replace('duration:1450,delay:1500','duration:600,delay:300').replace('},2980)','},1050)');";
     if(!source.includes(styleMarker))throw new Error('intro timing marker not found');
     source=source.replace(styleMarker,timingPatch+styleMarker);
-    source=source.replace('function stageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}','function stageFor(n){return n>=15?30:n>=10?20:n>=5?10:0;}');
-    source=source.replace("level.textContent='Lv.'+stage","level.textContent='Lv.'+Math.min(eaten,15)");
-    source=source.replace('10こで進化。まだ育つかも。','5こで進化。まだ育つかも。');
-    source=source.replace('20こで次の進化。','10こで次の進化。');
-    source=source.replace('30こで最終進化。','15こで最終進化。');
+    source=source.replace('function stageFor(n){return n>=30?30:n>=20?20:n>=10?10:0;}','function stageFor(n){return n>=10?30:n>=5?20:n>=2?10:0;}');
+    source=source.replace("level.textContent='Lv.'+stage","level.textContent='Lv.'+Math.min(eaten,10)");
+    source=source.replace('10こで進化。まだ育つかも。','2こで進化。まだ育つかも。');
+    source=source.replace('20こで次の進化。','5こで次の進化。');
+    source=source.replace('30こで最終進化。','10こで最終進化。');
     const pattern=/document\.open\(\);document\.write\(html\);document\.close\(\);?/;
     if(!pattern.test(source))throw new Error('patch marker not found');
     const hook=`html=html.replace('</body>','<script>document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#secretToggle,#tearToggle");if(b)window.scrollTo(0,0)},true);<\\/script><script src="https://kanatama0416-glitch.github.io/person2-shiten/room-guide.js?v=20260916"><\\/script><script src="https://kanatama0416-glitch.github.io/person1-shiten/eye-attract.js?v=20260916-stable"><\\/script></body>');`;
