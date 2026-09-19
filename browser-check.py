@@ -129,12 +129,31 @@ try:
     ))
 
     js("document.querySelector('.room-close').click();")
-    set_count(30)
+
+    # First arrival at the final evolution: restart must stay hidden.
+    set_count(0)
+    js("document.getElementById('secretToggle').click();")
+    wait.until(lambda d: d.execute_script("return document.getElementById('eyeRoom').open === true && !!document.querySelector('.room-food');"))
+    for i in range(10):
+        js("document.querySelector('.room-food').click();")
+        wait.until(lambda d, n=i+1: d.execute_script(
+            "return Number(localStorage.getItem(arguments[0]))===arguments[1];",
+            STORAGE_KEY, n,
+        ))
+        if i < 9:
+            js("document.querySelector('.room-spawn').click();")
+            wait.until(lambda d: d.execute_script("return !!document.querySelector('.room-food');"))
+    wait.until(lambda d: d.execute_script("return document.querySelector('#eyeRoom').classList.contains('stage-30');"))
+    first_restart_display = js("return getComputedStyle(document.querySelector('.room-restart')).display;")
+    assert_true(first_restart_display == 'none', f'first final evolution unexpectedly shows restart: {first_restart_display}')
+
+    # After closing once and opening the room again, restart becomes available.
+    js("document.querySelector('.room-close').click();")
     js("document.getElementById('secretToggle').click();")
     wait.until(lambda d: d.execute_script("return document.getElementById('eyeRoom').open === true && getComputedStyle(document.querySelector('.room-restart')).display !== 'none';"))
     js("document.querySelector('.room-restart').click();")
     wait.until(lambda d: d.execute_script(
-        "return localStorage.getItem(arguments[0])==='0' && document.querySelector('.hero-pet').classList.contains('stage-0');",
+        "return localStorage.getItem(arguments[0])==='0' && document.querySelector('.hero-pet').classList.contains('stage-0') && getComputedStyle(document.querySelector('.room-restart')).display === 'none';",
         STORAGE_KEY,
     ))
 
