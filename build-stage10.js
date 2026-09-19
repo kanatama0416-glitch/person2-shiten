@@ -135,6 +135,21 @@ if (!stage10Pattern.test(html) || !stage20Pattern.test(html) || !stage30Pattern.
 html = html.replace(stage10Pattern, "    if(stage===10){evolution.innerHTML=shitenEvolutionSvg(10);status.textContent='なんだか、よくみえる。';help.innerHTML='たくさん食べて、進化したみたい。<br>目玉から、にょきにょき生えてきた。';next.textContent='20こで次の進化。';pet.setAttribute('aria-label','大きな目玉から小さな目玉が5つにょきにょき生えた目玉');}");
 html = html.replace(stage20Pattern, "    if(stage===20){evolution.innerHTML=shitenEvolutionSvg(20);status.textContent='なんだか、まわしてる。';help.innerHTML='目玉たちがはなれて、<br>まわりをくるくるまわっている。';next.textContent='30こで最終進化。';pet.setAttribute('aria-label','小さな目玉衛星をまわす大きな目玉');}");
 html = html.replace(stage30Pattern, "    if(stage===30){evolution.classList.add('god');evolution.innerHTML=shitenEvolutionSvg(30);status.textContent='なんだか、ぜんぶみえる。';help.innerHTML='もう、目玉をあげなくてもいいみたい。<br>いま、こっちを見ている。';next.textContent='';spawnButton.disabled=true;spawnText.textContent='みられている。';tray.innerHTML='';pet.setAttribute('aria-label','金色の後光と目玉衛星を持つ神々しい目玉');}");
+const restartCssOld = '.stage-30 .room-restart{display:block}';
+const restartCssNew = '.stage-30.restart-ready .room-restart{display:block}';
+if (!html.includes(restartCssOld)) throw new Error('restart CSS marker missing');
+html = html.replace(restartCssOld, restartCssNew);
+
+const launcherOld = "launcher.addEventListener('click',function(){if(!room.open){oldOverflow=document.body.style.overflow;room.showModal();document.body.style.overflow='hidden';renderEvolution(false);}if(stage<30)spawn();});";
+const launcherNew = "launcher.addEventListener('click',function(){if(!room.open){oldOverflow=document.body.style.overflow;room.showModal();document.body.style.overflow='hidden';room.classList.toggle('restart-ready',stage===30);renderEvolution(false);}if(stage<30)spawn();});";
+if (!html.includes(launcherOld)) throw new Error('launcher restart marker missing');
+html = html.replace(launcherOld, launcherNew);
+
+const restartOld = "restartButton.addEventListener('click',function(){eaten=0;born=0;tray.innerHTML='';save();renderEvolution(false);status.textContent='また、はじめから。';spawnButton.focus({preventScroll:true});});";
+const restartNew = "restartButton.addEventListener('click',function(){room.classList.remove('restart-ready');eaten=0;born=0;tray.innerHTML='';save();renderEvolution(false);status.textContent='また、はじめから。';spawnButton.focus({preventScroll:true});});";
+if (!html.includes(restartOld)) throw new Error('restart handler marker missing');
+html = html.replace(restartOld, restartNew);
+
 
 // Every room render also updates the hero immediately; reload uses the saved value above.
 const renderNeedle = "var newStage=stageFor(eaten),changed=newStage!==stage;stage=newStage;room.classList.remove('stage-0','stage-10','stage-20','stage-30');";
