@@ -72,7 +72,6 @@ jobs:
           replace_required('browser-check.py', '    set_count(10)\n', '    set_count(2)\n')
           replace_required('browser-check.py', '    set_count(9)\n', '    set_count(1)\n')
           replace_required("browser-check.py", "localStorage.getItem(arguments[0])==='10'", "localStorage.getItem(arguments[0])==='2'")
-          replace_required('browser-check.py', '    set_count(30)\n', '    set_count(10)\n')
           PY
 
       - name: Build and validate site
