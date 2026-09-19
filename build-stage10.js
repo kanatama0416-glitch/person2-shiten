@@ -5,6 +5,12 @@ const sourcePath = process.argv[2] || 'index.html';
 const outPath = process.argv[3] || 'public/index.html';
 let html = fs.readFileSync(sourcePath, 'utf8');
 
+const remoteBaseUrl = 'https://raw.githubusercontent.com/kanatama0416-glitch/person1-shiten/93246663e808f739feba769129b4593087c794cf/index.html';
+if (!html.includes(remoteBaseUrl)) {
+  throw new Error('runtime base URL not found');
+}
+html = html.replace(remoteBaseUrl, './base.html');
+
 const MARKER = 'SHITEN_SHARED_PET_V15';
 if (html.includes(MARKER)) {
   throw new Error('source already contains generated shared-pet patch');
@@ -158,4 +164,7 @@ new Function(outer[1]);
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, html);
+const localBasePath = path.join(path.dirname(sourcePath), 'base.html');
+if (!fs.existsSync(localBasePath)) throw new Error('local base.html missing');
+fs.copyFileSync(localBasePath, path.join(path.dirname(outPath), 'base.html'));
 console.log('Built and validated shared room/page pet renderer v15 with page-restore sync.');
