@@ -143,6 +143,18 @@ try:
     assert_true(nav_count == 5, f'expected 5 navigation links, got {nav_count}')
     assert_true(about_href and 'about-shiten' in about_href, f'About link missing or wrong: {about_href}')
 
+    profile_icons = js("""
+      return {
+        total: document.querySelectorAll('.creator-signature .creator-spine__icon').length,
+        eye: document.querySelectorAll('.creator-signature .profile-icon-eye').length,
+        card: document.querySelectorAll('.creator-signature .profile-icon-card').length,
+        plan: document.querySelectorAll('.creator-signature .profile-icon-plan').length,
+        event: document.querySelectorAll('.creator-signature .profile-icon-event').length,
+        place: document.querySelectorAll('.creator-signature .profile-icon-place').length
+      };
+    """)
+    assert_true(profile_icons == {'total': 5, 'eye': 1, 'card': 1, 'plan': 1, 'event': 1, 'place': 1}, f'profile icons wrong: {profile_icons}')
+
     print('Browser visual checks passed after intro at 390x844: saved stages, visible evolved hero, 5-eye Lv.10 room, live sync, restart sync, title separation, touch rules, navigation.')
 finally:
     driver.quit()
