@@ -11,6 +11,11 @@ if (!html.includes(remoteBaseUrl)) {
 }
 html = html.replace(remoteBaseUrl, './base.html');
 
+// The deployed page must keep the launcher fully opaque.
+const launcherOpacity = '.secret-toggle{opacity:.85}';
+if (!html.includes(launcherOpacity)) throw new Error('launcher opacity rule missing');
+html = html.replace(launcherOpacity, '.secret-toggle{opacity:1!important}');
+
 const MARKER = 'SHITEN_SHARED_PET_V15';
 if (html.includes(MARKER)) {
   throw new Error('source already contains generated shared-pet patch');
