@@ -66,6 +66,27 @@ try:
     js("localStorage.setItem(arguments[0],'0'); location.reload();", STORAGE_KEY)
     wait_ready()
 
+    # Verify the 02 book-cover layout is unchanged and Google Books covers can load where configured.
+    wait.until(lambda d: d.execute_script(
+        "return [...document.querySelectorAll('.book-cover-photo')].length===5 && [...document.querySelectorAll('.book-cover-photo')].every(function(img){return img.complete && img.naturalWidth>20 && img.naturalHeight>20;});"
+    ))
+    cover_state = js("""
+        return [...document.querySelectorAll('.book')].map(function(book){
+          var img=book.querySelector('.book-cover-photo'), frame=book.querySelector('.cover').getBoundingClientRect(), mock=book.querySelector('.mock').getBoundingClientRect();
+          return {src:img.currentSrc||img.src, source:img.dataset.coverSource||'local', isbn:img.dataset.googleBooksIsbn||'', frameW:frame.width, frameH:frame.height, mockW:mock.width, mockH:mock.height, naturalW:img.naturalWidth, naturalH:img.naturalHeight};
+        });
+    """)
+    assert_true(len(cover_state) == 5, f'expected five book covers, got {len(cover_state)}')
+    for state in cover_state[1:]:
+        assert_true(abs(state['frameW']-cover_state[0]['frameW']) < 1 and abs(state['frameH']-cover_state[0]['frameH']) < 1,
+                    f'book cover frame size changed: {cover_state}')
+        assert_true(abs(state['mockW']-cover_state[0]['mockW']) < 1 and abs(state['mockH']-cover_state[0]['mockH']) < 1,
+                    f'book mock size changed: {cover_state}')
+    google_loaded = [state for state in cover_state if state['source'] == 'google-books' and 'books.google.com/books/content' in state['src']]
+    assert_true(len(google_loaded) >= 1, f'no Google Books cover loaded; cover state={cover_state}')
+    driver.save_screenshot(str(SCREEN_DIR / 'desktop-books-google.png'))
+    print('Book cover check:', cover_state)
+
     open_room()
     drag_one_food_to_pet()
     wait.until(lambda d: d.execute_script(
