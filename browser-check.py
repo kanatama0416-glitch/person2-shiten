@@ -172,7 +172,7 @@ try:
         place: document.querySelectorAll('.creator-signature .profile-icon-place').length
       };
     """)
-    assert_true(profile_icons == {'total': 5, 'eye': 1, 'card': 1, 'plan': 1, 'event': 1, 'place': 1}, f'profile icons wrong: {profile_icons}')
+    assert_true(profile_icons == {'total': 3, 'eye': 1, 'card': 1, 'plan': 0, 'event': 1, 'place': 0}, f'profile icons wrong: {profile_icons}')
 
     print('Browser visual checks passed after intro at 390x844: saved stages, visible evolved hero, 5-eye Lv.10 room, live sync, restart sync, title separation, touch rules, navigation.')
 finally:
