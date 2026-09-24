@@ -82,11 +82,10 @@ try:
                     f'book cover frame size changed: {cover_state}')
         assert_true(abs(state['mockW']-cover_state[0]['mockW']) < 1 and abs(state['mockH']-cover_state[0]['mockH']) < 1,
                     f'book mock size changed: {cover_state}')
-    google_loaded = [state for state in cover_state if state['source'] == 'google-books' and 'books.google.com/books/content' in state['src']]
-    assert_true(len(google_loaded) == 1 and google_loaded[0]['isbn'] == '9784865411836',
-                f'expected only book 2 to use a verified Google Books cover; cover state={cover_state}')
-    assert_true(all(state['source'] in ('local','local-fallback') for state in (cover_state[0], cover_state[2], cover_state[3], cover_state[4])),
-                f'books 1,3,4,5 should use local covers; cover state={cover_state}')
+    assert_true(all(state['source'] in ('local','local-fallback') for state in cover_state),
+                f'all five books should use uploaded local covers; cover state={cover_state}')
+    assert_true(all('books.google.com/books/content' not in state['src'] for state in cover_state),
+                f'Google Books cover URL should not remain; cover state={cover_state}')
     driver.save_screenshot(str(SCREEN_DIR / 'desktop-books-google.png'))
     print('Book cover check:', cover_state)
 
